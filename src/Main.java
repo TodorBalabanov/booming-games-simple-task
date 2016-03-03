@@ -4,20 +4,22 @@ public class Main {
 
 	private static final Random PRNG = new Random();
 
+	private static long numberOfSpins = 1_000_000;
+
 	private static char view[][] = new char[5][5];
 
 	private static int freeGames = 0;
 
-	private static long won = 0L;
+	private static long totalWon = 0L;
 
-	private static long lost = 0L;
+	private static long totalLost = 0L;
 
 	private static char payouts[][] = { { 0, 0, 0, 0, 0, 0 },
 			{ 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 },
 			{ 100, 5, 10, 50, 100, 5 }, { 250, 10, 50, 100, 150, 10 },
 			{ 500, 50, 100, 200, 250, 50 }, };
 
-	private static char strip[][] = {
+	private static char strips[][] = {
 			{ 'B', 'C', 'A', 'C', 'A', 'W', 'A', 'A', 'C', 'A', 'D', 'C', 'B',
 					'B', 'S', 'C', 'A', 'C', 'C', 'B', 'A', 'D', 'B', 'C', 'D',
 					'B', 'C', 'A', 'B', 'A', 'B', },
@@ -35,10 +37,10 @@ public class Main {
 					'C', 'D', 'B', 'D', 'A', 'B', }, };
 
 	private static void spin() {
-		for (int i = 0; i < view.length && i < strip.length; i++) {
-			int r = PRNG.nextInt(strip[i].length);
+		for (int i = 0; i < view.length && i < strips.length; i++) {
+			int r = PRNG.nextInt(strips[i].length);
 			for (int j = 0; j < view[i].length; j++) {
-				view[i][j] = strip[i][(r + j) % strip[i].length];
+				view[i][j] = strips[i][(r + j) % strips[i].length];
 			}
 		}
 	}
@@ -195,18 +197,21 @@ public class Main {
 		}
 	}
 
-	public static void main(String[] args) {
-		for (long g = 0; g < 10_000_000; g++) {
-			lost += 5;
+	private static void monteCarlo() {
+		totalWon = 0;
+		totalLost = 0;
+		
+		for (long g = 0; g < numberOfSpins; g++) {
+			totalLost += 5;
 			spin();
-			won += linesWin() + 5 * scatterWin();
+			totalWon += linesWin() + 5 * scatterWin();
 			if (hasX() == true) {
 				/*
 				 * Scatter win is counted only once and no extra free spins
 				 * added.
 				 */
 				repace();
-				won += linesWin();
+				totalWon += linesWin();
 			}
 
 			/*
@@ -215,14 +220,14 @@ public class Main {
 			freeGames = numberOfFreeGames();
 			while (freeGames > 0) {
 				spin();
-				won += linesWin() + 5 * scatterWin();
+				totalWon += linesWin() + 5 * scatterWin();
 				if (hasX() == true) {
 					/*
 					 * Scatter win is counted only once and no extra free spins
 					 * added.
 					 */
 					repace();
-					won += linesWin();
+					totalWon += linesWin();
 				}
 
 				freeGames--;
@@ -230,6 +235,25 @@ public class Main {
 			}
 		}
 
-		System.out.println(100D * (double) won / (double) lost);
+		System.out.println(100D * (double) totalWon / (double) totalLost);
+	}
+
+	private static void bruteForce() {
+		totalWon = 0;
+		totalLost = 0;
+		
+		long numberOfCombinations = 1;
+		for (int i = 0; i < strips.length; i++) {
+			numberOfCombinations *= strips[i].length;
+		}
+		
+		for (long g = 0; g < numberOfCombinations; g++) {
+			//TODO nextCombination();
+		}
+	}
+
+	public static void main(String[] args) {
+		monteCarlo();
+		bruteForce();
 	}
 }
