@@ -6,9 +6,33 @@ public class Main {
 
 	private static long numberOfSpins = 1_000_000;
 
+	private static int stops[] = new int[5];
+
 	private static char view[][] = new char[5][5];
 
 	private static int freeGames = 0;
+
+	private static long baseBonusCount = 0L;
+
+	private static long freeBonusCount = 0L;
+
+	private static long baseFreeActivationCount = 0L;
+
+	private static long freeFreeActivationCount = 0L;
+
+	private static long baseRegularWon = 0L;
+
+	private static long baseBonusWon = 0L;
+
+	private static long baseLost = 0L;
+
+	private static long freeRegularWon = 0L;
+
+	private static long freeBonusWon = 0L;
+
+	private static long scatterBaseWon = 0L;
+
+	private static long scatterFreeWon = 0L;
 
 	private static long totalWon = 0L;
 
@@ -198,62 +222,216 @@ public class Main {
 	}
 
 	private static void monteCarlo() {
-		totalWon = 0;
-		totalLost = 0;
-		
+		baseBonusCount = 0L;
+		freeBonusCount = 0L;
+		baseFreeActivationCount = 0L;
+		freeFreeActivationCount = 0L;
+		baseRegularWon = 0L;
+		baseBonusWon = 0L;
+		baseLost = 0L;
+		freeRegularWon = 0L;
+		freeBonusWon = 0L;
+		scatterBaseWon = 0L;
+		scatterFreeWon = 0L;
+		totalWon = 0L;
+		totalLost = 0L;
+
+		long win1 = 0;
+		long win2 = 0;
 		for (long g = 0; g < numberOfSpins; g++) {
+			baseLost += 5;
 			totalLost += 5;
 			spin();
-			totalWon += linesWin() + 5 * scatterWin();
+			win1 = linesWin();
+			win2 = scatterWin();
+			baseRegularWon += win1;
+			scatterBaseWon += 5 * win2;
+			totalWon += win1 + 5 * win2;
 			if (hasX() == true) {
 				/*
 				 * Scatter win is counted only once and no extra free spins
 				 * added.
 				 */
 				repace();
-				totalWon += linesWin();
+				win1 = linesWin();
+				baseBonusWon += win1;
+				totalWon += win1;
+				baseBonusCount++;
 			}
 
 			/*
 			 * Free games mode.
 			 */
 			freeGames = numberOfFreeGames();
+			if (freeGames > 0) {
+				baseFreeActivationCount++;
+			}
 			while (freeGames > 0) {
 				spin();
-				totalWon += linesWin() + 5 * scatterWin();
+				win1 = linesWin();
+				win2 = scatterWin();
+				freeRegularWon += win1;
+				scatterFreeWon += 5 * win2;
+				totalWon += win1 + 5 * win2;
 				if (hasX() == true) {
 					/*
 					 * Scatter win is counted only once and no extra free spins
 					 * added.
 					 */
 					repace();
-					totalWon += linesWin();
+					win1 = linesWin();
+					freeBonusWon += win1;
+					totalWon += win1;
+					freeBonusCount++;
 				}
 
 				freeGames--;
-				freeGames += numberOfFreeGames();
+				int count = numberOfFreeGames();
+				if (count > 0) {
+					freeFreeActivationCount++;
+				}
+				freeGames += count;
 			}
 		}
 
-		System.out.println(100D * (double) totalWon / (double) totalLost);
+		System.out.print("Bonus games in base game:\t");
+		System.out.println(100D * (double) baseBonusCount / numberOfSpins);
+
+		System.out.print("Bonus gaems in free games:\t");
+		System.out.println(100D * (double) freeBonusCount / 1);
+
+		System.out.print("Free games frequency in base game:\t");
+		System.out.println(100D * (double) baseFreeActivationCount / numberOfSpins);
+
+		System.out.print("Free games frequency in free games:\t");
+		System.out.println(100D * (double) freeFreeActivationCount / 1);
+
+		System.out.print("Won by regular lines in base game:\t");
+		System.out.println(100D * (double) baseRegularWon / totalLost);
+
+		System.out.print("Won by bonus lines in base game:\t");
+		System.out.println(100D * (double) baseBonusWon / totalLost);
+
+		System.out.print("Won by regular lines in free games:\t");
+		System.out.println(100D * (double) freeRegularWon / totalLost);
+
+		System.out.print("Won by bonus lines in free games:\t");
+		System.out.println(100D * (double) freeBonusWon / totalLost);
+
+		System.out.print("Won by scatters in base game:\t");
+		System.out.println(100D * (double) scatterBaseWon / totalLost);
+
+		System.out.print("Won by scatters in free games:\t");
+		System.out.println(100D * (double) scatterFreeWon / totalLost);
+
+		System.out.print("Total RTP:\t");
+		System.out.println(100D * (double) totalWon / totalLost);
+	}
+
+	private static void nextScreen() {
+		for (int i = 0; i < view.length && i < strips.length; i++) {
+			for (int j = 0; j < view[i].length; j++) {
+				view[i][j] = strips[i][(stops[i] + j) % strips[i].length];
+			}
+		}
+	}
+
+	private static void nextCombination() {
+		stops[stops.length - 1]++;
+		for (int i = stops.length - 1; i > 0; i--) {
+			if (stops[i] > strips[i].length) {
+				stops[i - 1]++;
+				stops[i] = 0;
+			}
+		}
 	}
 
 	private static void bruteForce() {
-		totalWon = 0;
-		totalLost = 0;
-		
+		baseBonusCount = 0L;
+		freeBonusCount = 0L;
+		baseFreeActivationCount = 0L;
+		freeFreeActivationCount = 0L;
+		baseRegularWon = 0L;
+		baseBonusWon = 0L;
+		baseLost = 0L;
+		freeRegularWon = 0L;
+		freeBonusWon = 0L;
+		scatterBaseWon = 0L;
+		scatterFreeWon = 0L;
+		totalWon = 0L;
+		totalLost = 0L;
+
+		stops = new int[] { 0, 0, 0, 0, 0 };
+
 		long numberOfCombinations = 1;
 		for (int i = 0; i < strips.length; i++) {
 			numberOfCombinations *= strips[i].length;
 		}
-		
+
+		long win1 = 0;
+		long win2 = 0;
 		for (long g = 0; g < numberOfCombinations; g++) {
-			//TODO nextCombination();
+			nextScreen();
+
+			baseLost += 5;
+			totalLost += 5;
+			win1 = linesWin();
+			win2 = scatterWin();
+			baseRegularWon += win1;
+			scatterBaseWon += 5 * win2;
+			totalWon += win1 + 5 * win2;
+			if (hasX() == true) {
+				/*
+				 * Scatter win is counted only once and no extra free spins
+				 * added.
+				 */
+				repace();
+				win1 = linesWin();
+				baseBonusWon += win1;
+				totalWon += win1;
+				baseBonusCount++;
+			}
+
+			nextCombination();
 		}
+
+
+		System.out.print("Bonus games in base game:\t");
+		System.out.println(100D * (double) baseBonusCount / numberOfSpins);
+
+		System.out.print("Bonus gaems in free games:\t");
+		System.out.println(100D * (double) freeBonusCount / 1);
+
+		System.out.print("Free games frequency in base game:\t");
+		System.out.println(100D * (double) baseFreeActivationCount / numberOfSpins);
+
+		System.out.print("Free games frequency in free games:\t");
+		System.out.println(100D * (double) freeFreeActivationCount / 1);
+
+		System.out.print("Won by regular lines in base game:\t");
+		System.out.println(100D * (double) baseRegularWon / totalLost);
+
+		System.out.print("Won by bonus lines in base game:\t");
+		System.out.println(100D * (double) baseBonusWon / totalLost);
+
+		System.out.print("Won by regular lines in free games:\t");
+		System.out.println(100D * (double) freeRegularWon / totalLost);
+
+		System.out.print("Won by bonus lines in free games:\t");
+		System.out.println(100D * (double) freeBonusWon / totalLost);
+
+		System.out.print("Won by scatters in base game:\t");
+		System.out.println(100D * (double) scatterBaseWon / totalLost);
+
+		System.out.print("Won by scatters in free games:\t");
+		System.out.println(100D * (double) scatterFreeWon / totalLost);
+
+		System.out.print("Total RTP:\t");
+		System.out.println(100D * (double) totalWon / totalLost);
 	}
 
 	public static void main(String[] args) {
-		monteCarlo();
+		// monteCarlo();
 		bruteForce();
 	}
 }
